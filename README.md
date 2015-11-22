@@ -22,8 +22,7 @@ DESCRIPTION
 The window list is maintained in `~/.compton-invert`, one window class
 per line. The duplicate lines are removed.
 
-OPTIONS
--------
+**OPTIONS**
 
 * `-a CLASS` -- add a new window class to the list
 * `-d CLASS` -- remove a window class from the list
