@@ -1,0 +1,72 @@
+#!/bin/zsh
+
+# compton-invert --- Invert window colors using compton
+
+# Copyright (C) 2015 Wojciech Siewierski
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+
+CONFIG=$HOME/.compton-invert
+
+IFS=$'\n'
+if [ -f "$CONFIG" ]; then
+    INVERTED=($(< $CONFIG))
+else
+    INVERTED=()
+fi
+unset IFS
+
+select-window()
+{
+    xprop WM_CLASS | sed 's/.*"\(.*\)"/\1/' || exit 2
+}
+
+while getopts "Aa:Dd:lsr" ARG; do
+    case "$ARG" in
+        A)                      # add (interactive)
+            OPTARG=$(select-window)
+            ;&
+        a)                      # add
+            INVERTED+=$OPTARG
+            ;;
+        D)                      # add (interactive)
+            OPTARG=$(select-window)
+            ;&
+        d)                      # delete
+            TMP=($OPTARG)
+            INVERTED=(${INVERTED:|TMP})
+            ;;
+        l)                      # list
+            print ${(j:\n:)INVERTED}
+            ;;
+        s)                      # save
+            print ${(j:\n:)INVERTED} > $CONFIG
+            ;;
+        r)                      # run
+            COMMAND=(compton)
+            for CLASS in $INVERTED; do
+                COMMAND=($COMMAND --invert-color-include class_g=\"$CLASS\")
+            done
+
+            pkill -x compton
+            exec $=COMMAND
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+    INVERTED=(${(u)INVERTED})
+done
+shift $((OPTIND-1))
